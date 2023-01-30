@@ -16,7 +16,7 @@ describe("Token Contract",function(){
     });
 
     describe("Deployment", function(){
-        it("Shuld set the right owner", async function(){
+        it("Should set the right owner", async function(){
             expect(await hardhatToken.owner()).to.equal(owner.address);
         });
 
@@ -26,7 +26,7 @@ describe("Token Contract",function(){
         });
     });
 
-    describe("Transaction", function(){
+    describe("Transactions", function(){
         it("Should transfer token between accounts", async function(){
             //Owner account to address1.address
             await hardhatToken.transfer(address1.address, 10);
@@ -34,15 +34,35 @@ describe("Token Contract",function(){
             expect(address1Balance).to.equal(10);
 
             //address1.address to address2.address
-            await hardhatToken.connect(address1).transfer(address2.address, 20);
+            await hardhatToken.connect(address1).transfer(address2.address, 10);
             const address2Balance = await hardhatToken.balanceOf(address2.address);
-            expect(address2Balance).to.equal(20);
+            expect(address2Balance).to.equal(10);
+        });
+
+        it("Should fail if sender doesn't have enough tokens", async function(){
+            const initialOwnerBalance = await hardhatToken.balanceOf(owner.address);
+            await expect(hardhatToken.connect(address1).transfer(owner.address,1)).to.be.revertedWith("Not enough tokens");
+            expect(await hardhatToken.balanceOf(owner.address)).to.equal(initialOwnerBalance);
+        });
+
+        it("Should update balance after transfer", async function(){
+            const initialOwnerBalance = await hardhatToken.balanceOf(owner.address);
+            await hardhatToken.transfer(address1.address, 5);
+            await hardhatToken.transfer(address2.address, 10);
+
+            const finalOwnerBalnace = await hardhatToken.balanceOf(owner.address);
+            expect(finalOwnerBalnace).to.equal(initialOwnerBalance-15);
+
+            const address1Balance = await hardhatToken.balanceOf(address1.address);
+            expect(address1Balance).to.equal(5);
+
+            const address2Balance = await hardhatToken.balanceOf(address2.address);
+            expect(address2Balance).to.equal(10);
         });
     });
 });
 
 // describe("Token contract", function(){
-
 //     it("Deployment should assign the total supply of tokens to the owner", async function(){
 //         const [owner] = await ethers.getSigners();
 //         console.log("Signers object: ",owner);
